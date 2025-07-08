@@ -1,13 +1,14 @@
+import os
 from flask import Flask, send_file, Response
 from ftplib import FTP
 from io import BytesIO
 
 app = Flask(__name__)
 
-# Configurações do FTP
-FTP_HOST = "storage.bunnycdn.com"
-FTP_USER = "vz-364e076f-3d3"
-FTP_PASS = "fc006d56-8af8-4f26-94ff4562faac-e0af-4cb8"
+# Configurações do FTP a partir de variáveis de ambiente
+FTP_HOST = os.environ.get("FTP_HOST", "storage.bunnycdn.com")
+FTP_USER = os.environ.get("FTP_USER")
+FTP_PASS = os.environ.get("FTP_PASS")
 
 @app.route('/<path:filename>')
 def serve_ftp_file(filename):
