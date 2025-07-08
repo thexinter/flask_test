@@ -4,23 +4,29 @@ from ftplib import FTP
 
 app = Flask(__name__)
 
-# Configurações do FTP a partir de variáveis de ambiente
+# Configurações do FTP (via variáveis de ambiente)
 FTP_HOST = os.environ.get("FTP_HOST", "storage.bunnycdn.com")
 FTP_USER = os.environ.get("FTP_USER")
 FTP_PASS = os.environ.get("FTP_PASS")
 
-CHUNK_SIZE = 64 * 1024  # 64 KB
+# Tamanho do buffer de leitura (chunks maiores = melhor performance em rede estável)
+CHUNK_SIZE = 256 * 1024  # 256 KB
 
 @app.route('/<path:filename>')
 def serve_ftp_file_stream(filename):
     try:
-        ftp = FTP(FTP_HOST)
+        # Conecta ao FTP
+        ftp = FTP()
+        ftp.connect(FTP_HOST, 21, timeout=10)
+        ftp.set_pasv(True)  # modo passivo (padrão, mas reforçado aqui)
         ftp.login(FTP_USER, FTP_PASS)
         ftp.voidcmd("TYPE I")  # modo binário
 
+        # Inicia a transferência do arquivo
         conn = ftp.transfercmd(f"RETR {filename}")
 
-        def generate():
+        # Generator para envio dos dados em tempo real
+        def stream_data():
             try:
                 while True:
                     chunk = conn.recv(CHUNK_SIZE)
@@ -28,10 +34,12 @@ def serve_ftp_file_stream(filename):
                         break
                     yield chunk
             finally:
+                # Fecha tudo corretamente
                 conn.close()
                 ftp.quit()
 
-        return Response(generate(), content_type="application/octet-stream")
+        # Retorna streaming para o navegador
+        return Response(stream_data(), content_type="application/octet-stream")
 
     except Exception as e:
         return Response(f"Erro ao acessar o FTP: {str(e)}", status=500)
