@@ -1,5 +1,5 @@
 import os
-from flask import Flask, Response
+from flask import Flask, Response, stream_with_context
 from ftplib import FTP
 
 app = Flask(__name__)
@@ -18,7 +18,7 @@ def serve_ftp_file_stream(filename):
         # Conecta ao FTP
         ftp = FTP()
         ftp.connect(FTP_HOST, 21, timeout=10)
-        ftp.set_pasv(True)  # modo passivo (padrão, mas reforçado aqui)
+        ftp.set_pasv(True)  # modo passivo
         ftp.login(FTP_USER, FTP_PASS)
         ftp.voidcmd("TYPE I")  # modo binário
 
@@ -34,12 +34,13 @@ def serve_ftp_file_stream(filename):
                         break
                     yield chunk
             finally:
-                # Fecha tudo corretamente
                 conn.close()
                 ftp.quit()
 
-        # Retorna streaming para o navegador
-        return Response(stream_data(), content_type="application/octet-stream")
+        # Resposta com streaming e header CORS
+        response = Response(stream_with_context(stream_data()), content_type="application/octet-stream")
+        response.headers["Access-Control-Allow-Origin"] = "*"
+        return response
 
     except Exception as e:
         return Response(f"Erro ao acessar o FTP: {str(e)}", status=500)
