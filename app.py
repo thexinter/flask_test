@@ -5,7 +5,7 @@ from ftplib import FTP
 app = Flask(__name__)
 
 # Configurações do FTP (via variáveis de ambiente)
-FTP_HOST = os.environ.get("FTP_HOST", "storage.bunnycdn.com")
+FTP_HOST = os.environ.get("FTP_HOST")
 FTP_USER = os.environ.get("FTP_USER")
 FTP_PASS = os.environ.get("FTP_PASS")
 
@@ -40,6 +40,8 @@ def serve_ftp_file_stream(filename):
         # Resposta com streaming e header CORS
         response = Response(stream_with_context(stream_data()), content_type="application/octet-stream")
         response.headers["Access-Control-Allow-Origin"] = "*"
+        response.headers["Access-Control-Allow-Methods"] = "*"
+        response.headers["Accept-Encoding"] = "*"
         return response
 
     except Exception as e:
