@@ -11,7 +11,7 @@ app = Flask(__name__)
 # ========================
 # Configurações do Servidor FTP
 # ========================
-FTP_HOST = os.environ.get("FTP_HOST"")
+FTP_HOST = os.environ.get("FTP_HOST")
 FTP_USER = os.environ.get("FTP_USER")
 FTP_PASS = os.environ.get("FTP_PASS")
 
